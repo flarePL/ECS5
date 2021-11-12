@@ -1,0 +1,9 @@
+version: 2
+importPivots: 1
+tpsheetFileNames:
+- Assets/SpriteSheets/Elementy.tpsheet
+textureFileNames:
+- Assets/SpriteSheets/Elementy.png
+normalmapFileNames:
+- 
+enableDebugOutput: 0
