@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using PionGames.Components;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -40,16 +41,22 @@ namespace PionGames.Managers
                 for (int j = 0; j < grid; j++)
                 {
                     poz = new float3(((i - grid / 2) * ODSTEP_POMIEDZY_ASTEROIDAMI), ((j - grid / 2) * ODSTEP_POMIEDZY_ASTEROIDAMI), 0);
-                    
-                    kierunek = new float3(Random.Range(-MAX_PREDKOSC_LINIOWA, MAX_PREDKOSC_LINIOWA), Random.Range(-MAX_PREDKOSC_LINIOWA, MAX_PREDKOSC_LINIOWA), 0);
 
+                    kierunek = new float3(Random.Range(-MAX_PREDKOSC_LINIOWA, MAX_PREDKOSC_LINIOWA), Random.Range(-MAX_PREDKOSC_LINIOWA, MAX_PREDKOSC_LINIOWA), 0);
+                    kierunek = math.normalize(kierunek);
                     //przesuniecie srodkowej asteroidy ktora inaczej koloduje ze statkiem i automatycznie konczy gre 
                     if (i == grid / 2 && j == grid / 2) poz = new float3(10 * ((grid / 2 + 1) * ODSTEP_POMIEDZY_ASTEROIDAMI), 10 * ((grid / 2 + 1) * ODSTEP_POMIEDZY_ASTEROIDAMI), 0);
 
+
                     entityManager.SetComponentData(listaAsteroid[i * grid + j], new Translation { Value = poz });
-                    /* entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kierunek { Value = kierunek });
-                     entityManager.AddComponentData(listaAsteroid[i * grid + j], new Predkosc { Value = 10 });
-                     entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kolizyjny { typ = Typ.ASTEROIDA });*/
+                    entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kierunek { Value = kierunek });
+
+
+                    //entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kolizyjny { typ = Typ.ASTEROIDA }); 
+
+
+                    /* 
+                     entityManager.AddComponentData(listaAsteroid[i * grid + j], new Predkosc { Value = 10 });*/
                     //entityManager.AddComponentData(listaAsteroid[i * grid + j], new Scale { Value = 0.5f });
 
                 }
