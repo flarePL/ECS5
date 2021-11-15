@@ -141,7 +141,7 @@
             <key>datafile</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename>../../../../Speedy Gonzales LTS/Assets/SpriteSheets/UI.tpsheet</filename>
+                <filename>../../Assets/SpriteSheets/Elementy.tpsheet</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -187,9 +187,21 @@
             <true/>
         </struct>
         <key>individualSpriteSettings</key>
-        <map type="IndividualSpriteSettingsMap"/>
+        <map type="IndividualSpriteSettingsMap">
+            <key type="filename">../asteroida.png</key>
+            <key type="filename">../pocisk.png</key>
+            <key type="filename">../statekKosmiczny.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+            </struct>
+        </map>
         <key>fileList</key>
-        <array/>
+        <array>
+            <filename>../asteroida.png</filename>
+            <filename>../pocisk.png</filename>
+            <filename>../statekKosmiczny.png</filename>
+        </array>
         <key>ignoreFileList</key>
         <array/>
         <key>replaceList</key>
