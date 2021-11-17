@@ -14,7 +14,7 @@ namespace PionGames.Managers
     {
         private EntityManager entityManager;
         private Entity asteroidaEntityPrefab;
-        private const int ODSTEP_POMIEDZY_ASTEROIDAMI = 5;
+        private const int ODSTEP_POMIEDZY_ASTEROIDAMI = 2;
         private const float MAX_PREDKOSC_LINIOWA = 2;
 
 
