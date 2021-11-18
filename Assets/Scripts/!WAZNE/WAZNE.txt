@@ -1,0 +1,22 @@
+﻿
+
+//czego nie uzywac
+--------------------------------
+Important: The following iteration types should not be used in new code:
+
+IJobChunk
+IJobForEach
+IJobForEachWithEntity
+ComponentSystem
+JobComponentSystem
+zastapic je  SystemBase and SystemBase.Entities.ForEach or IJobEntityBatch 
+
+zamiast typeof(RotationSpeed) uzywac ComponentType.ReadOnly<RotationSpeed>()  gdzie tylko sie da
+------------------------------------------------------------------
+EntityQuery query
+    = GetEntityQuery(typeof(RotationQuaternion),
+                     ComponentType.ReadOnly<RotationSpeed>());
+
+
+                     tu skonczylem czytac
+                     https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/world.html

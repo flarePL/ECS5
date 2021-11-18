@@ -7,32 +7,34 @@ using Unity.Burst;
 /*
 namespace PionGames.Systems
 {
-   
-    public class MoveSystem : JobComponentSystem
-    {
-        protected override void OnCreate()
-        {
-           
-            //Enabled = false;
-        }
-        [BurstCompile]
-        protected override JobHandle OnUpdate(JobHandle inputDeps)
-        {
-            float dt = Time.DeltaTime;
-            var jobHandle = Entities
-                //.ForEach((ref Translation translation, in Kierunek kierunek, in Predkosc predkosc) =>
-                .ForEach((ref Translation translation, in Kierunek kierunek) =>
-                {
-                    //translation.Value += kierunek.Value * predkosc.Value * dt;
-                    translation.Value += kierunek.Value * 1 * dt;
-                })
-                .Schedule(inputDeps);
+ */
 
-            return jobHandle;
-        }
-    }
+//** UWAGA JobComponentSystem should not be used in new code: **/ //https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/chunk_iteration.html
+//public class MoveSystem : JobComponentSystem
+//{
+//        protected override void OnCreate()
+//        {
 
-}*/
+//            //Enabled = false;
+//        }
+//        [BurstCompile]
+//        protected override JobHandle OnUpdate(JobHandle inputDeps)
+//        {
+//            float dt = Time.DeltaTime;
+//            var jobHandle = Entities
+//                //.ForEach((ref Translation translation, in Kierunek kierunek, in Predkosc predkosc) =>
+//                .ForEach((ref Translation translation, in Kierunek kierunek) =>
+//                {
+//                    //translation.Value += kierunek.Value * predkosc.Value * dt;
+//                    translation.Value += kierunek.Value * 1 * dt;
+//                })
+//                .Schedule(inputDeps);
+
+//            return jobHandle;
+//        }
+//    }
+
+//}
 
 namespace PionGames.Systems
 {
