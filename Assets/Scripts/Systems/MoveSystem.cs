@@ -10,6 +10,7 @@ namespace PionGames.Systems
  */
 
 //** UWAGA JobComponentSystem should not be used in new code: **/ //https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/chunk_iteration.html
+//**  The ComponentSystem and JobComponentSystem classes, along with IJobForEach, are depreciated
 //public class MoveSystem : JobComponentSystem
 //{
 //        protected override void OnCreate()
@@ -52,9 +53,10 @@ namespace PionGames.Systems
                     //translation.Value += kierunek.Value * predkosc.Value * dt;
                     translation.Value += kierunek.Value * 1 * dt;
                 })
-                .ScheduleParallel();
+                //lub .ScheduleParallel(); - nie wiem jaka roznica
+                //lub .ScheduleParallel(this.Dependency);
+                .Schedule();
 
-           
         }
     }
 

@@ -18,5 +18,29 @@ EntityQuery query
                      ComponentType.ReadOnly<RotationSpeed>());
 
 
-                     tu skonczylem czytac
-                     https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/world.html
+Roznica pomiedzy Schedule ScheduleParallel
+ ----------------------------------------------------
+ https://docs.unity3d.com/Packages/com.unity.entities@0.17/api/Unity.Entities.SystemBase.Entities.html#Unity_Entities_SystemBase_Entities
+
+ Shared component filtering - kohorta , rozwiazanie dla mojego ECS5
+ ----------------------------------------------------------------------------
+ https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/ecs_entities_foreach.html
+
+ iteracja reczna
+ -------------------------------------------------------------------
+ Tych metod iteracyjnych należy używać tylko w kodzie testowym lub debugującym  wiecej tu https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/manual_iteration.html
+ entityManager.GetAllEntities();
+ entityManager.GetAllChunks()
+
+ Looking up entity data
+ ----------------------------------------------------------------
+  GetComponent<T>(Entity)  tu: https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/ecs_lookup_data.html
+
+    tu skonczylem czytac
+    https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/world.html
+
+    to zobaczyc
+    https://www.youtube.com/watch?v=nu_HyPuIBPA
+    https://www.youtube.com/watch?v=qnSCE8gVg3w
+    https://www.youtube.com/watch?v=PeTcIzoaTEA
+
