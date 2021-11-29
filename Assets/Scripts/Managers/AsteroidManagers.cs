@@ -17,7 +17,7 @@ namespace PionGames.Managers
         private const int ODSTEP_POMIEDZY_ASTEROIDAMI = 4;
         private const float MAX_PREDKOSC_LINIOWA = 2;
 
-
+        
         public AsteroidsManager(GameObject asteroidaPrefab)
         {
             entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;

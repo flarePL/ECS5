@@ -5,13 +5,15 @@ using Unity.Transforms;
 
 namespace PionGames.Systems
 {
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     public class KolizyjnySystem : SystemBase
     {
         private const int DLUGOSC_KOMORKI = 400;
+        private EndInitializationEntityCommandBufferSystem _endInitECBSystem;
 
         protected override void OnCreate()
         {
-
+            _endInitECBSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
 
         }
         protected override void OnUpdate()
@@ -20,21 +22,23 @@ namespace PionGames.Systems
             ZrobCos1();
 
         }
+
+
         private void UtworzTabele()
         {
-
+            EntityCommandBuffer entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer();
 
             Entities
-            .ForEach((Entity entity, ref Translation position) =>
-            {
-                int poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
-                int poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
-                int komorkaID = poczatekX + poczatekY * 100000;
+             .ForEach((Entity entity, ref Translation position) =>
+             {
+                 int poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
+                 int poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
+                 int komorkaID = poczatekX + poczatekY * 100000;
 
-                KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
-                EntityManager.AddSharedComponentData(entity, komorka);
-            })
-           .Schedule();
+                 KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
+                 entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entity, komorka);
+             })
+            .Run();
 
 
         }
