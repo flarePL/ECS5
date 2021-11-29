@@ -1,90 +1,120 @@
 ﻿using PionGames.Components;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace PionGames.Systems
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public class KolizyjnySystem : SystemBase
     {
-        private const int DLUGOSC_KOMORKI = 400;
+        private const int DLUGOSC_KOMORKI = 10;
         private EndInitializationEntityCommandBufferSystem _endInitECBSystem;
-
+        private NativeList<Entity> asteroidy2Destroy;
+        private EntityCommandBuffer eCB;
         protected override void OnCreate()
         {
             _endInitECBSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+            asteroidy2Destroy = new NativeList<Entity>(Allocator.Persistent);
+            //entityCommandBuffer = new EntityCommandBuffer(Allocator.Persistent);
         }
         protected override void OnUpdate()
         {
+           // Debug.Log("--------------------");
+           // Debug.Log("OnUpdate");
+            asteroidy2Destroy.Clear();
+            //eCB = new EntityCommandBuffer(Allocator.Temp);
             UtworzTabele();
-            ZrobCos1();
-
+            SprawdzZderzenia();
+            UsunAsteroidyPoZderzeniu();
         }
 
 
         private void UtworzTabele()
         {
-            EntityCommandBuffer entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer();
-
+            //Debug.Log("UtworzTabele");
+            eCB = _endInitECBSystem.CreateCommandBuffer();
+            EntityCommandBuffer entityCommandBuffer = eCB;
+           
             Entities
              .ForEach((Entity entity, ref Translation position) =>
              {
-                 int poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
-                 int poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
+                 int poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
+                 int poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
                  int komorkaID = poczatekX + poczatekY * 100000;
-
+                 Debug.Log("komorkaID " + komorkaID);
                  KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
                  entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entity, komorka);
+                 
              })
-            .Schedule();
-           
+            .Run();
+
             _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
-            
+
         }
-        /*public void UtworzTabeleOLD()
+
+        private void SprawdzZderzenia()
         {
+            //Debug.Log("SprawdzZderzenia");
+            float squreRadius = 1f;
+            EntityQuery m_Group = GetEntityQuery(ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<KomorkaGrupa>());
 
-            int poczatekX;
-            int poczatekY;
-            int koniecX;
-            int koniecY;
-            int ileEntities = 0;
 
-            Entities.WithoutBurst().ForEach((in Entity entity, in Translation position, in Kolizyjny k) =>
+            // tu skonczylem
+            //jak zrobic aby bylo po wszystkich chunkach
+            //moze to >>?? https://forum.unity.com/threads/sharedcomponent-burst-compile.564154/
+            m_Group.SetSharedComponentFilter(new KomorkaGrupa { komorkaID = 0 });
+            NativeArray<Entity> entities = m_Group.ToEntityArray(Allocator.Temp);
+            NativeArray<Translation> positions = m_Group.ToComponentDataArray<Translation>(Allocator.Temp);
+           
+            for (int i = 0; i < positions.Length; i++)
             {
-                ileEntities++;
-                poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
-                poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI) * DLUGOSC_KOMORKI;
-                if (position.Value.x > 0) koniecX = poczatekX + DLUGOSC_KOMORKI; else koniecX = poczatekX - DLUGOSC_KOMORKI;
-                if (position.Value.y > 0) koniecY = poczatekY + DLUGOSC_KOMORKI; else koniecY = poczatekY - DLUGOSC_KOMORKI;
-
-                TabelaID tabelaId = new TabelaID { pX = poczatekX, pY = poczatekY, kX = koniecX, kY = koniecY };
-                MojEntity idPos = new MojEntity { poz = new float2(position.Value.x, position.Value.y), index = entity.Index, entity = entity, typ = k.typ };
-                bool keyExists = tabelaKomorek.ContainsKey(tabelaId);
-                if (keyExists)
+                for (int j = 0; j < positions.Length; j++)
                 {
-                    tabelaKomorek[tabelaId].Add(idPos);
-                }
-                else
-                {
-                    NativeList<MojEntity> lista = new NativeList<MojEntity>(Allocator.TempJob);
-                    lista.Add(idPos);
-                    tabelaKomorek.Add(tabelaId, lista);
-                }
-            }).Run();
 
-        }*/
-        private void ZrobCos1()
+                    if(i==j)continue;
+                     if (CheckCollision(positions[i].Value, positions[j].Value, squreRadius))
+                     {
+                         asteroidy2Destroy.Add(entities[i]);
+                         asteroidy2Destroy.Add(entities[j]);
+                        /* Debug.Log($"zderzenie {i}, {j}");
+                         Debug.Log("zderzenie "+ positions[i].Value.x+" "+ positions[j].Value.x);
+                         Debug.Log("zderzenie " + positions[i].Value.y + " " + positions[j].Value.y);*/
+
+                     }
+                   
+
+                   
+                }
+
+            }
+
+
+
+        }
+        private void UsunAsteroidyPoZderzeniu()
         {
-            Entities
-               .ForEach((ref Translation translation, in Kierunek kierunek) =>
-               {
+            //Debug.Log("UsunAsteroidyPoZderzeniu");
+            foreach (var asteroida in asteroidy2Destroy)
+            {
+                eCB.DestroyEntity(asteroida);
+            }
+            //eCB.Dispose();
 
-               })
+        }
+        private bool CheckCollision(float3 posA, float3 posB, float radiusSqr)
+        {
+            float3 delta = posA - posB;
+            float distanceSquare = delta.x * delta.x + delta.y * delta.y;
 
-               .Schedule();
-
+            return distanceSquare <= radiusSqr;
+        }
+        protected override void OnDestroy()
+        {
+            asteroidy2Destroy.Dispose();
         }
     }
 
