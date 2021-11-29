@@ -14,7 +14,6 @@ namespace PionGames.Systems
         protected override void OnCreate()
         {
             _endInitECBSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
-
         }
         protected override void OnUpdate()
         {
@@ -38,9 +37,10 @@ namespace PionGames.Systems
                  KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
                  entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entity, komorka);
              })
-            .Run();
-
-
+            .Schedule();
+           
+            _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
+            
         }
         /*public void UtworzTabeleOLD()
         {
