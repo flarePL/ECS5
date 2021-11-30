@@ -8,16 +8,20 @@ using UnityEngine;
 
 namespace PionGames.Systems
 {
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(InitializationSystemGroup))] 
     public class KolizyjnySystem : SystemBase
     {
         private const int DLUGOSC_KOMORKI = 10;
         private EndInitializationEntityCommandBufferSystem _endInitECBSystem;
+
+        private BeginPresentationEntityCommandBufferSystem _endSimulationECBSystem;
         private NativeList<Entity> asteroidy2Destroy;
-        private EntityCommandBuffer eCB;
+       
         protected override void OnCreate()
         {
             _endInitECBSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
+            _endSimulationECBSystem = World.GetOrCreateSystem<BeginPresentationEntityCommandBufferSystem>();
+            
             asteroidy2Destroy = new NativeList<Entity>(Allocator.Persistent);
             //entityCommandBuffer = new EntityCommandBuffer(Allocator.Persistent);
         }
@@ -36,21 +40,20 @@ namespace PionGames.Systems
         private void UtworzTabele()
         {
             //Debug.Log("UtworzTabele");
-            eCB = _endInitECBSystem.CreateCommandBuffer();
-            EntityCommandBuffer entityCommandBuffer = eCB;
+            
+            EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter(); 
            
             Entities
-             .ForEach((Entity entity, ref Translation position) =>
+             .ForEach((Entity entity, int entityInQueryIndex, ref Translation position) =>
              {
                  int poczatekX = (int)(position.Value.x / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
                  int poczatekY = (int)(position.Value.y / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
                  int komorkaID = poczatekX + poczatekY * 100000;
-                 Debug.Log("komorkaID " + komorkaID);
                  KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
-                 entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entity, komorka);
+                 entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entityInQueryIndex, entity, komorka);
                  
              })
-            .Run();
+            .ScheduleParallel();
 
             _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
 
@@ -97,10 +100,11 @@ namespace PionGames.Systems
         }
         private void UsunAsteroidyPoZderzeniu()
         {
+            EntityCommandBuffer entityCommandBuffer2 = _endSimulationECBSystem.CreateCommandBuffer(); ;
             //Debug.Log("UsunAsteroidyPoZderzeniu");
             foreach (var asteroida in asteroidy2Destroy)
             {
-                eCB.DestroyEntity(asteroida);
+                entityCommandBuffer2.DestroyEntity(asteroida);
             }
             //eCB.Dispose();
 
