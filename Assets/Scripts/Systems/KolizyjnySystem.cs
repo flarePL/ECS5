@@ -5,22 +5,30 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngineTime = UnityEngine.Time;
 
 namespace PionGames.Systems
 {
-    [UpdateInGroup(typeof(InitializationSystemGroup))] 
+   // [UpdateInGroup(typeof(InitializationSystemGroup))] 
     public class KolizyjnySystem : SystemBase
     {
         private const int DLUGOSC_KOMORKI = 10;
-        private EndInitializationEntityCommandBufferSystem _endInitECBSystem;
+        private EntityCommandBufferSystem _endInitECBSystem;
 
-        private BeginPresentationEntityCommandBufferSystem _endSimulationECBSystem;
+        //private BeginPresentationEntityCommandBufferSystem _endSimulationECBSystem;   moge miec kilka systemow w tym samym pkcie/grupie/fazie 
+        //Tips and Best Practices
+        //Use the existing EntityCommandBufferSystems instead of adding new ones, if possible
+        //tu: https://docs.unity3d.com/Packages/com.unity.entities@0.17/manual/system_update_order.html
+        //dlatego wywalilem BeginPresentationEntityCommandBufferSystem
+
+
+        private EntityCommandBufferSystem _endSimulationECBSystem;
         private NativeList<Entity> asteroidy2Destroy;
        
         protected override void OnCreate()
         {
-            _endInitECBSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
-            _endSimulationECBSystem = World.GetOrCreateSystem<BeginPresentationEntityCommandBufferSystem>();
+            _endInitECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
+            _endSimulationECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
             
             asteroidy2Destroy = new NativeList<Entity>(Allocator.Persistent);
             //entityCommandBuffer = new EntityCommandBuffer(Allocator.Persistent);
@@ -34,13 +42,16 @@ namespace PionGames.Systems
             UtworzTabele();
             SprawdzZderzenia();
             UsunAsteroidyPoZderzeniu();
+
         }
 
 
         private void UtworzTabele()
         {
+           
+           
             //Debug.Log("UtworzTabele");
-            
+
             EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter(); 
            
             Entities
