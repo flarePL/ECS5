@@ -1,4 +1,6 @@
 ﻿using PionGames.Components;
+using PionGames.Structs;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -40,8 +42,8 @@ namespace PionGames.Systems
             asteroidy2Destroy.Clear();
             //eCB = new EntityCommandBuffer(Allocator.Temp);
             UtworzTabele();
-            SprawdzZderzenia();
-            UsunAsteroidyPoZderzeniu();
+            SprawdzZderzenia2();
+            //UsunAsteroidyPoZderzeniu();
 
         }
 
@@ -69,7 +71,63 @@ namespace PionGames.Systems
             _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
 
         }
+        private void SprawdzZderzenia2()
+        {
+            List<KomorkaGrupa> komorki = new List<KomorkaGrupa>();
+            EntityManager.GetAllUniqueSharedComponentData<KomorkaGrupa>(komorki);
+            EntityQuery queryGrupa = GetEntityQuery(ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<KomorkaGrupa>());
+            NativeArray<Entity> entities;
+            NativeArray<Translation> positions;
+           
+            NativeArray<EntityData> entitiesData;
+            NativeList<JobHandle> jobHandles = new NativeList<JobHandle>(Allocator.TempJob);
+          
+            List<ZderzeniaJOB> ZderzeniaJOBy = new List<ZderzeniaJOB>();
 
+
+            //memory leak 
+            foreach (KomorkaGrupa komorkaJedna in komorki)
+            {
+               // Debug.Log("aaa " + komorkaJedna.komorkaID);
+                queryGrupa.ResetFilter();
+                queryGrupa.SetSharedComponentFilter(new KomorkaGrupa { komorkaID = komorkaJedna.komorkaID });
+                entities = queryGrupa.ToEntityArray(Allocator.TempJob);
+                positions = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
+                entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
+                for (int i = 0; i < entitiesData.Length; i++)
+                {
+                    entitiesData[i] = new EntityData { position = positions[i].Value, entity = entities[i], index = entities[i].Index };
+
+                }
+                var zderzeniaJob = new ZderzeniaJOB { positions = entitiesData, e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
+
+                ZderzeniaJOBy.Add(zderzeniaJob);
+                JobHandle jh = zderzeniaJob.Schedule();
+                jobHandles.Add(jh);
+               /* positions.Dispose();
+                entitiesData.Dispose();
+                entities.Dispose();*/
+
+
+            }
+            JobHandle.CompleteAll(jobHandles);
+
+           
+            foreach (var job in ZderzeniaJOBy)
+            {
+                //entity2Destroy.AddRange(job.e2D);
+               //entity2Relocate.AddRange(job.e2R);
+
+                job.e2D.Dispose();
+                job.e2R.Dispose();
+                job.positions.Dispose();
+                
+
+            }
+           
+            jobHandles.Dispose();
+           
+        }
         private void SprawdzZderzenia()
         {
             //Debug.Log("SprawdzZderzenia");
@@ -81,6 +139,7 @@ namespace PionGames.Systems
             //jak zrobic aby bylo po wszystkich chunkach
             //moze to >>?? https://forum.unity.com/threads/sharedcomponent-burst-compile.564154/
             m_Group.SetSharedComponentFilter(new KomorkaGrupa { komorkaID = 0 });
+            
             NativeArray<Entity> entities = m_Group.ToEntityArray(Allocator.Temp);
             NativeArray<Translation> positions = m_Group.ToComponentDataArray<Translation>(Allocator.Temp);
            
