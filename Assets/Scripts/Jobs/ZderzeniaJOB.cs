@@ -7,12 +7,12 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-//[BurstCompile]
+[BurstCompile]
 public struct ZderzeniaJOB : IJob
 {
-    [ReadOnly]
-    public NativeArray<EntityData> positions;
-    //public NativeArray<Entity> entities;
+   // [ReadOnly]
+    public NativeArray<Translation> positions;
+    public NativeArray<Entity> entities;
     public NativeList<Entity> e2D;
     public NativeList<Entity> e2R;
     public const float wielkoscAsterooidy = 1f;  //kwadrat dlugosci!
@@ -26,13 +26,13 @@ public struct ZderzeniaJOB : IJob
             {
 
                 if (i == j) continue;
-                if (CheckCollision(positions[i].position, positions[j].position, wielkoscAsterooidy))
+                if (CheckCollision(positions[i].Value, positions[j].Value, wielkoscAsterooidy))
                 {
-                   // e2D.Add(entities[i]);
-                   // e2D.Add(entities[j]);
-                    /* Debug.Log($"zderzenie {i}, {j}");
-                     Debug.Log("zderzenie "+ positions[i].Value.x+" "+ positions[j].Value.x);
-                     Debug.Log("zderzenie " + positions[i].Value.y + " " + positions[j].Value.y);*/
+                    e2D.Add(entities[i]);
+                    e2D.Add(entities[j]);
+                    //* Debug.Log($"zderzenie {i}, {j}");
+                    // Debug.Log("zderzenie "+ positions[i].Value.x+" "+ positions[j].Value.x);
+                    // Debug.Log("zderzenie " + positions[i].Value.y + " " + positions[j].Value.y);*//*
 
                 }
 
