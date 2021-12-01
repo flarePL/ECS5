@@ -57,8 +57,8 @@ namespace PionGames.Systems
         {
 
 
-            //Debug.Log("UtworzTabele");
-
+            //w oparciu o https://www.youtube.com/watch?v=hP4Vu6JbzSo&list=PLzDRvYVwl53s40yP5RQXitbT--IRcHqba&index=19
+            //czyli z NativeHashMap concurrent ect 
             EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter();
 
             Entities
