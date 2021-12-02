@@ -270,7 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   asteroidaPrefab: {fileID: 2155498098640884830, guid: 804b0acda3529a64b84231bf00033249, type: 3}
-  statekPrefab: {fileID: 3843438793853084938, guid: 3fefccec1be5e3347ae7ed51cee28af7, type: 3}
+  statekPrefab: {fileID: 0}
 --- !u!4 &1413527032
 Transform:
   m_ObjectHideFlags: 0
