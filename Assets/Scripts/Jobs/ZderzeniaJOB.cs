@@ -19,7 +19,11 @@ public struct ZderzeniaJOB : IJobParallelFor
     //NativeList nie jest dostepne dla IJobParallelFor
     //[DeallocateOnJobCompletion]
     [WriteOnly]
+<<<<<<< HEAD
     public NativeList<Entity>.ParallelWriter e2D;
+=======
+    public NativeQueue<Entity>.ParallelWriter e2D;
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
     
     
 
@@ -63,9 +67,14 @@ public struct ZderzeniaJOB : IJobParallelFor
             if (index == j) continue;
             if (CheckCollision(positions[index].Value, positions[j].Value, wielkoscAsterooidy))
             {
+<<<<<<< HEAD
                 //e2D.Add(entities[index]);
                 e2D.AddNoResize(entities[index]);
                // e2D.AddNoResize(entities[j]);
+=======
+                e2D.Enqueue(entities[index]);
+                e2D.Enqueue(entities[j]);
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
                
             }
 

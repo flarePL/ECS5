@@ -7,7 +7,7 @@ namespace PionGames.Managers
     {
         [SerializeField] private GameObject asteroidaPrefab;
         [SerializeField] private GameObject statekPrefab;
-        private int grid = 150;
+        private int grid = 50;
 
         public AsteroidsManager asteroidsManager { get; set; }
 

@@ -23,7 +23,7 @@ namespace PionGames.Systems
 
 
         private EntityCommandBufferSystem _endSimulationECBSystem;
-        private NativeList<Entity> asteroidy2Destroy;
+        private NativeQueue<Entity> asteroidy2Destroy;
         //[DeallocateOnJobCompletion]
         //Native​Hash​Map<int, NativeArray<Translation>> positionsALL = new NativeHashMap<int, NativeArray<Translation>>();
         //[DeallocateOnJobCompletion]
@@ -31,13 +31,17 @@ namespace PionGames.Systems
         //[DeallocateOnJobCompletion]
         //Native​Hash​Map<int, NativeArray<Entity>> entitiesALL = new NativeHashMap<int, NativeArray<Entity>>();
         Dictionary<int, NativeArray<Entity>> entitiesALL = new Dictionary<int, NativeArray<Entity>>();
+<<<<<<< HEAD
         Dictionary<int, NativeList<Entity>> e2DbezParallel = new Dictionary<int, NativeList<Entity>>();
+=======
+        Dictionary<int, NativeQueue<Entity>> e2DbezParallel = new Dictionary<int, NativeQueue<Entity>>();
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
         protected override void OnCreate()
         {
             _endInitECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
             _endSimulationECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
 
-            asteroidy2Destroy = new NativeList<Entity>(Allocator.Persistent);
+            asteroidy2Destroy = new NativeQueue<Entity>(Allocator.Persistent);
             //entityCommandBuffer = new EntityCommandBuffer(Allocator.Persistent);
         }
         protected override void OnUpdate()
@@ -104,8 +108,12 @@ namespace PionGames.Systems
 
                 entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
                 positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
+<<<<<<< HEAD
                 e2DbezParallel[komorkaJedna.komorkaID] = new NativeList<Entity>(64,Allocator.TempJob);   //64 - poczatkowa wielkosc
                
+=======
+                e2DbezParallel[komorkaJedna.komorkaID] = new NativeQueue<Entity>(Allocator.TempJob);
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
                 // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
 
                 /*entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
@@ -120,7 +128,11 @@ namespace PionGames.Systems
                 var zderzeniaJob = new ZderzeniaJOB { positions = positionsALL[komorkaJedna.komorkaID], entities = entitiesALL[komorkaJedna.komorkaID], e2D = e2DbezParallel[komorkaJedna.komorkaID].AsParallelWriter() };
 
                 ZderzeniaJOBy.Add(zderzeniaJob);
+<<<<<<< HEAD
                 JobHandle jh = zderzeniaJob.Schedule(positionsALL[komorkaJedna.komorkaID].Length, 16);  //16 - na ile jobow dodatkowo dzielic tego joba
+=======
+                JobHandle jh = zderzeniaJob.Schedule(positionsALL[komorkaJedna.komorkaID].Length, 32);
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
                 jobHandles.Add(jh);
                 /* positions.Dispose();
                  entitiesData.Dispose();
@@ -132,15 +144,22 @@ namespace PionGames.Systems
             //entitiesALL.Dispose();
             JobHandle.CompleteAll(jobHandles);
            
+<<<<<<< HEAD
             //Debug.Log(e2DbezParallel[0].Length);
 
 
+=======
+            Debug.Log(e2DbezParallel[0].Count);
+          
+            
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
             //Debug.Log("UsunAsteroidyPoZderzeniu");
             /*foreach (var asteroida in asteroidy2Destroy)
             {
                 entityCommandBuffer2.DestroyEntity(asteroida);
             }*/
             //eCB.Dispose();
+<<<<<<< HEAD
             EntityCommandBuffer entityCommandBuffer2 = _endSimulationECBSystem.CreateCommandBuffer(); ;
 
             foreach (KomorkaGrupa komorkaJedna in komorki)
@@ -152,10 +171,20 @@ namespace PionGames.Systems
                 {
                     entityCommandBuffer2.DestroyEntity(asteroida);
                 }
+=======
+            foreach (KomorkaGrupa komorkaJedna in komorki)
+            {
+
+               
+                e2DbezParallel[komorkaJedna.komorkaID].Dispose();
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
 
                 e2DbezParallel[komorkaJedna.komorkaID].Dispose();
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
             }
             foreach (var job in ZderzeniaJOBy)
             {
@@ -164,9 +193,17 @@ namespace PionGames.Systems
                 // asteroidy2Destroy.Enqueue(job.e2D.Deque());
 
 
+<<<<<<< HEAD
 
 
                 // czy ZADZIALA TAK ????
+=======
+
+
+                // czy ZADZIALA TAK ????
+               
+               // job.e2D.Dispose();
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
                
                // job.e2D.Dispose();
                
@@ -178,6 +215,15 @@ namespace PionGames.Systems
                 /* 
 
 
+<<<<<<< HEAD
+=======
+
+                //job.e2D.Dispose();
+
+                /* 
+
+
+>>>>>>> b87990d93d5377e5e25e547a6a77af6b8f5c1c90
              job.e2D.Dispose();*/
                 // job.e2R.Dispose();
                 // job.positions.Dispose();
