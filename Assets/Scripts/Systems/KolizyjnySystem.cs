@@ -104,7 +104,7 @@ namespace PionGames.Systems
 
                 entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
                 positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
-                e2DbezParallel[komorkaJedna.komorkaID] = new NativeList<Entity>(64,Allocator.TempJob);
+                e2DbezParallel[komorkaJedna.komorkaID] = new NativeList<Entity>(64,Allocator.TempJob);   //64 - poczatkowa wielkosc
                
                 // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
 
@@ -120,7 +120,7 @@ namespace PionGames.Systems
                 var zderzeniaJob = new ZderzeniaJOB { positions = positionsALL[komorkaJedna.komorkaID], entities = entitiesALL[komorkaJedna.komorkaID], e2D = e2DbezParallel[komorkaJedna.komorkaID].AsParallelWriter() };
 
                 ZderzeniaJOBy.Add(zderzeniaJob);
-                JobHandle jh = zderzeniaJob.Schedule(positionsALL[komorkaJedna.komorkaID].Length, 16);  
+                JobHandle jh = zderzeniaJob.Schedule(positionsALL[komorkaJedna.komorkaID].Length, 16);  //16 - na ile jobow dodatkowo dzielic tego joba
                 jobHandles.Add(jh);
                 /* positions.Dispose();
                  entitiesData.Dispose();
