@@ -1,4 +1,6 @@
-﻿using PionGames.Components;
+﻿using Piongames;
+using PionGames.Components;
+using PionGames.Systems;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -26,15 +28,16 @@ namespace PionGames.Managers
                 DestinationWorld = World.DefaultGameObjectInjectionWorld
             });
         }
+        
         public void TworzAsteroidy(int grid)
         {
+
+            Debug.Log("TworzAsteroidy");
             NativeArray<Entity> listaAsteroid = new NativeArray<Entity>(grid * grid, Allocator.TempJob);
             entityManager.Instantiate(asteroidaEntityPrefab, listaAsteroid);
 
             float3 poz;
             float3 kierunek;
-
-
 
             for (int i = 0; i < grid; i++)
             {
@@ -46,10 +49,11 @@ namespace PionGames.Managers
                     kierunek = math.normalize(kierunek);
                     //przesuniecie srodkowej asteroidy ktora inaczej koloduje ze statkiem i automatycznie konczy gre 
                     if (i == grid / 2 && j == grid / 2) poz = new float3(10 * ((grid / 2 + 1) * ODSTEP_POMIEDZY_ASTEROIDAMI), 10 * ((grid / 2 + 1) * ODSTEP_POMIEDZY_ASTEROIDAMI), 0);
-
+                    
 
                     entityManager.SetComponentData(listaAsteroid[i * grid + j], new Translation { Value = poz });
                     entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kierunek { Value = kierunek });
+                    entityManager.AddComponentData(listaAsteroid[i * grid + j], new KomorkaID { Value = ObliczKomorkaID(poz.x, poz.y) });
 
 
                     //entityManager.AddComponentData(listaAsteroid[i * grid + j], new Kolizyjny { typ = Typ.ASTEROIDA }); 
@@ -63,6 +67,15 @@ namespace PionGames.Managers
             }
 
             listaAsteroid.Dispose();
+
+          
+
+        }
+        public int ObliczKomorkaID(float x, float y)
+        {
+            int poczatekX = (int)math.floor(x / Settings.DLUGOSC_KOMORKI);
+            int poczatekY = (int)math.floor(y / Settings.DLUGOSC_KOMORKI);
+            return  poczatekX + poczatekY * 100000;
 
         }
 

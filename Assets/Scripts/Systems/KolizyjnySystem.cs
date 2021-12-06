@@ -1,4 +1,5 @@
-﻿using PionGames.Components;
+﻿using Piongames;
+using PionGames.Components;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
@@ -12,7 +13,7 @@ namespace PionGames.Systems
     // [UpdateInGroup(typeof(InitializationSystemGroup))] 
     public class KolizyjnySystem : SystemBase
     {
-        private const int DLUGOSC_KOMORKI = 50;
+
         private EntityCommandBufferSystem _endInitECBSystem;
 
         //private BeginPresentationEntityCommandBufferSystem _endSimulationECBSystem;   moge miec kilka systemow w tym samym pkcie/grupie/fazie 
@@ -27,31 +28,94 @@ namespace PionGames.Systems
         //[DeallocateOnJobCompletion]
         //Native​Hash​Map<int, NativeArray<Translation>> positionsALL = new NativeHashMap<int, NativeArray<Translation>>();
         //[DeallocateOnJobCompletion]
-        Dictionary<int, NativeArray<Translation>> positionsALL = new Dictionary<int, NativeArray<Translation>>() ;
+        Dictionary<int, NativeArray<Translation>> positionsALL = new Dictionary<int, NativeArray<Translation>>();
         //[DeallocateOnJobCompletion]
         //Native​Hash​Map<int, NativeArray<Entity>> entitiesALL = new NativeHashMap<int, NativeArray<Entity>>();
         Dictionary<int, NativeArray<Entity>> entitiesALL = new Dictionary<int, NativeArray<Entity>>();
 
+
+        NativeMultiHashMap<int, Entity> komorkiAllEntities = new NativeMultiHashMap<int, Entity>(30000, Allocator.Persistent);
+
         protected override void OnCreate()
         {
+            Enabled = false;
             _endInitECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
             _endSimulationECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
 
             asteroidy2Destroy = new NativeList<Entity>(Allocator.Persistent);
             //entityCommandBuffer = new EntityCommandBuffer(Allocator.Persistent);
+            //UtworzTabeleHashMap(komorkiAllEntities2);
+
+        }
+
+        public void UtworzTabeleHashMap()
+        {
+            
+            NativeMultiHashMap<int, Entity>.ParallelWriter komorkiAll = komorkiAllEntities.AsParallelWriter();
+
+            Entities.ForEach((in Entity entity, in KomorkaID komorkaID) =>
+            {
+                komorkiAll.Add(komorkaID.Value, entity);
+
+            })
+            .ScheduleParallel();
+
+            UpdateHashMap();
+
+        }
+        public void UpdateHashMap()
+        {
+            NativeArray<int> listaKluczy = komorkiAllEntities.GetKeyArray(Allocator.Temp);
+
+            Debug.Log("listaKluczy.Length"); 
+
+
+
+
+        }
+        private void UtworzTabeleHashMapParallel()
+        {
+            /* NativeHashMap<int, NativeList<Entity>>.ParallelWriter komorkiAllEntitiesParallel = komorkiAllEntities.AsParallelWriter();
+
+             Entities
+               .ForEach((Entity entity, int entityInQueryIndex, in KomorkaID komorkaID) =>
+               {
+                   //jesli jest juz taka tabela
+                   if (komorkiAllEntitiesParallel.TryAdd(komorkaID.Value, new NativeList<Entity>()))
+                   {
+                       komorkiAllEntitiesParallel[komorkaID.Value].Add(entity);
+                   }
+                   else
+                   {
+                       //komorkiAllEntities[komorkaID.Value] = new NativeList<Entity>();
+                       komorkiAllEntitiesParallel[komorkaID.Value].Add(entity);
+                   }
+
+               })
+              .ScheduleParallel();
+ */
+
         }
         protected override void OnUpdate()
         {
+            Debug.Log("onupdate kolizyjny");
+            /*
             // Debug.Log("--------------------");
             // Debug.Log("OnUpdate");
             asteroidy2Destroy.Clear();
             //eCB = new EntityCommandBuffer(Allocator.Temp);
             UtworzTabele();
-            SprawdzZderzenia2();
-            UsunAsteroidyPoZderzeniu();
-
+            // SprawdzZderzenia2();
+            //UsunAsteroidyPoZderzeniu();
+            SprZdarzenia();*/
         }
 
+        private void SprZdarzenia()
+        {
+            //tu by sie przydalo miec mozliwosc tworzenia tabel z entities by component entitiesData
+
+
+        }
 
         private void UtworzTabele()
         {
@@ -62,13 +126,19 @@ namespace PionGames.Systems
             EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter();
 
             Entities
-             .ForEach((Entity entity, int entityInQueryIndex, ref Translation position) =>
+             .ForEach((Entity entity, int entityInQueryIndex, ref Translation position, in KomorkaID komorkaID) =>
              {
-                 int poczatekX = (int)math.floor(position.Value.x / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
-                 int poczatekY = (int)math.floor(position.Value.y / DLUGOSC_KOMORKI);// * DLUGOSC_KOMORKI;
-                 int komorkaID = poczatekX + poczatekY * 100000;
-                 KomorkaGrupa komorka = new KomorkaGrupa { komorkaID = komorkaID };
-                 entityCommandBuffer.AddSharedComponent<KomorkaGrupa>(entityInQueryIndex, entity, komorka);
+                 int poczatekX = (int)math.floor(position.Value.x / Settings.DLUGOSC_KOMORKI);
+                 int poczatekY = (int)math.floor(position.Value.y / Settings.DLUGOSC_KOMORKI);
+                 int nowaKomorkaID = poczatekX + poczatekY * 100000;
+
+                 //tylko jesli jest zmiana
+                 if (nowaKomorkaID != komorkaID.Value)
+                 {
+                     entityCommandBuffer.SetComponent(entityInQueryIndex, entity, new KomorkaID { Value = nowaKomorkaID });
+                 }
+
+
 
              })
             .ScheduleParallel();
@@ -101,7 +171,7 @@ namespace PionGames.Systems
 
                 entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
                 positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
-               // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
+                // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
 
                 /*entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
                 for (int i = 0; i < entitiesData.Length; i++)
@@ -111,7 +181,7 @@ namespace PionGames.Systems
                 }
                 var zderzeniaJob = new ZderzeniaJOB { positions = entitiesData, e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
                */
-                var zderzeniaJob = new ZderzeniaJOB { positions = positionsALL[komorkaJedna.komorkaID],entities = entitiesALL[komorkaJedna.komorkaID], e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
+                var zderzeniaJob = new ZderzeniaJOB { positions = positionsALL[komorkaJedna.komorkaID], entities = entitiesALL[komorkaJedna.komorkaID], e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
 
                 ZderzeniaJOBy.Add(zderzeniaJob);
                 JobHandle jh = zderzeniaJob.Schedule();
@@ -133,7 +203,7 @@ namespace PionGames.Systems
                 //entity2Relocate.AddRange(job.e2R);
 
                 asteroidy2Destroy.AddRange(job.e2D);
-               
+
 
                 job.e2D.Dispose();
                 job.e2R.Dispose();
@@ -146,7 +216,7 @@ namespace PionGames.Systems
             {
                 positionsALL[komorkaJedna.komorkaID].Dispose();
             }*/
-           
+
             jobHandles.Dispose();
 
         }
@@ -211,6 +281,7 @@ namespace PionGames.Systems
         protected override void OnDestroy()
         {
             asteroidy2Destroy.Dispose();
+            komorkiAllEntities2.Dispose();
         }
     }
 
