@@ -10,21 +10,21 @@ namespace PionGames.Managers
     {
         [SerializeField] private GameObject asteroidaPrefab;
         [SerializeField] private GameObject statekPrefab;
-        
+
 
         public AsteroidsManager asteroidsManager { get; set; }
+        private KolizyjnySystem kolizyjnySystem;
 
         void Start()
         {
             asteroidsManager = new AsteroidsManager(asteroidaPrefab);
             asteroidsManager.TworzAsteroidy(Settings.GRID);
-            WlaczWylaczSystemKolizyjny();
+            kolizyjnySystem = World.DefaultGameObjectInjectionWorld.GetExistingSystem<KolizyjnySystem>();
+            kolizyjnySystem.UtworzTabeleHashMap();
+            kolizyjnySystem.Enabled = true;
 
         }
-        private void WlaczWylaczSystemKolizyjny()
-        {
-            World.DefaultGameObjectInjectionWorld.GetExistingSystem<KolizyjnySystem>().UtworzTabeleHashMap();
-        }
+
 
 
 

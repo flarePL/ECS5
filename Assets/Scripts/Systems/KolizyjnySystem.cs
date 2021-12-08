@@ -31,14 +31,17 @@ namespace PionGames.Systems
         Dictionary<int, NativeArray<Translation>> positionsALL = new Dictionary<int, NativeArray<Translation>>();
         //[DeallocateOnJobCompletion]
         //Native​Hash​Map<int, NativeArray<Entity>> entitiesALL = new NativeHashMap<int, NativeArray<Entity>>();
-        Dictionary<int, NativeArray<Entity>> entitiesALL = new Dictionary<int, NativeArray<Entity>>();
-
+        //Dictionary<int, NativeArray<Entity>> entitiesALL = new Dictionary<int, NativeArray<Entity>>();
+        Native​Hash​Map<int, NativeArray<Entity>> entitiesALL = new NativeHashMap<int, NativeArray<Entity>>();
+        Native​Hash​Map<int, NativeArray<Entity>> entitiesXXX = new NativeHashMap<int, NativeArray<Entity>>();
 
         NativeMultiHashMap<int, Entity> komorkiAllEntities = new NativeMultiHashMap<int, Entity>(30000, Allocator.Persistent);
+        private bool updatuje;
 
         protected override void OnCreate()
         {
             Enabled = false;
+            updatuje = true;
             _endInitECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
             _endSimulationECBSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
 
@@ -50,29 +53,103 @@ namespace PionGames.Systems
 
         public void UtworzTabeleHashMap()
         {
-            
+
             NativeMultiHashMap<int, Entity>.ParallelWriter komorkiAll = komorkiAllEntities.AsParallelWriter();
 
-            Entities.ForEach((in Entity entity, in KomorkaID komorkaID) =>
-            {
-                komorkiAll.Add(komorkaID.Value, entity);
+            JobHandle jH = Entities.ForEach((in Entity entity, in KomorkaID komorkaID) =>
+              {
 
-            })
-            .ScheduleParallel();
+                  // Debug.Log("wstawiam "+ komorkaID.Value +" "+entity);
+                  komorkiAll.Add(komorkaID.Value, entity);
 
-            UpdateHashMap();
+              })
+            .ScheduleParallel(this.Dependency);
+
+            jH.Complete();
+
+
 
         }
-        public void UpdateHashMap()
+
+        protected override void OnUpdate()
         {
-            NativeArray<int> listaKluczy = komorkiAllEntities.GetKeyArray(Allocator.Temp);
 
-            Debug.Log("listaKluczy.Length"); 
+            if (updatuje)
+            {
+
+                UpdateEntitiesKomorkaID();
+                komorkiAllEntities.Clear();
+                UtworzTabeleHashMap();
+                PrzygotujTabeleEntitiesByKey();
+            }
+            //updatuje = false;
+
+        }
+
+        //bez parallel na razie
+        public void PrzygotujTabeleEntitiesByKey()
+        {
+
+           
+            Debug.Log("PrzygotujTabeleEntitiesByKey");
+            Native​Hash​Map<int, NativeArray<Entity>> entitiesALL3 = new NativeHashMap<int, NativeArray<Entity>>();
+            //NativeArray<int> listaKluczy = komorkiAllEntities.GetKeyArray(Allocator.Temp);
+
+            //var (keys, length) = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp);
+            (NativeArray<int> keys, int length) = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp);
+            //NativeArray<int> k = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp)
+
+
+            for (int i = 0; i < length; i++)
+            {
+                var key = keys[i];
+                var enumerator = komorkiAllEntities.GetValuesForKey(key);
+                int ileEntitiesODanymKluczu = komorkiAllEntities.CountValuesForKey(key);
+                //Debug.Log(" ile " + ileEntitiesODanymKluczu);
+                //NativeList<Entity> a = new NativeList<Entity>(Allocator.Temp);
+                // entitiesALL.Add(key, a);
+                /* a.Dispose();
+                 entitiesALL[key].Dispose();*/
+                //entitiesALL[key] = new NativeList<Entity>(Allocator.Temp);
+                NativeArray<Entity> tab = new NativeArray<Entity>(ileEntitiesODanymKluczu, Allocator.Temp);
+
+                var index = 0;
+                while (enumerator.MoveNext())
+                {
+
+                    var entity = enumerator.Current;
+                    //Debug.Log(" key " + entity.ToString());
+                    //entitiesALL[key].Add(entity);
+                    tab[index] = entity;
+                    index++;
+
+                }
+                //Debug.Log("tab " + tab.Length);
+                entitiesALL3.Add(key, tab);
+
+                Debug.Log("wstawilem");
+                //entitiesXXX.Add(key, tab);  //nie moge 
+                // entitiesALL[key].Dispose();
+
+
+
+                // get items by key
+            }
+
+
 
 
 
 
         }
+        public int ObliczKomorkaID(in float x, in float y)
+        {
+            int poczatekX = (int)math.floor(x / Settings.DLUGOSC_KOMORKI);
+            int poczatekY = (int)math.floor(y / Settings.DLUGOSC_KOMORKI);
+            return poczatekX + poczatekY * 100000;
+
+        }
+
         private void UtworzTabeleHashMapParallel()
         {
             /* NativeHashMap<int, NativeList<Entity>>.ParallelWriter komorkiAllEntitiesParallel = komorkiAllEntities.AsParallelWriter();
@@ -96,19 +173,19 @@ namespace PionGames.Systems
  */
 
         }
-        protected override void OnUpdate()
-        {
-            Debug.Log("onupdate kolizyjny");
-            /*
-            // Debug.Log("--------------------");
-            // Debug.Log("OnUpdate");
-            asteroidy2Destroy.Clear();
-            //eCB = new EntityCommandBuffer(Allocator.Temp);
-            UtworzTabele();
-            // SprawdzZderzenia2();
-            //UsunAsteroidyPoZderzeniu();
-            SprZdarzenia();*/
-        }
+        /* protected override void OnUpdate()
+         {
+             Debug.Log("onupdate kolizyjny");
+             *//*
+             // Debug.Log("--------------------");
+             // Debug.Log("OnUpdate");
+             asteroidy2Destroy.Clear();
+             //eCB = new EntityCommandBuffer(Allocator.Temp);
+             UtworzTabele();
+             // SprawdzZderzenia2();
+             //UsunAsteroidyPoZderzeniu();
+             SprZdarzenia();*//*
+         }*/
 
         private void SprZdarzenia()
         {
@@ -117,12 +194,8 @@ namespace PionGames.Systems
 
         }
 
-        private void UtworzTabele()
+        private void UpdateEntitiesKomorkaID()
         {
-
-
-            //w oparciu o https://www.youtube.com/watch?v=hP4Vu6JbzSo&list=PLzDRvYVwl53s40yP5RQXitbT--IRcHqba&index=19
-            //czyli z NativeHashMap concurrent ect 
             EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter();
 
             Entities
@@ -135,10 +208,9 @@ namespace PionGames.Systems
                  //tylko jesli jest zmiana
                  if (nowaKomorkaID != komorkaID.Value)
                  {
+                     //Debug.Log($"zmien nowa {nowaKomorkaID} stara {komorkaID.Value}");
                      entityCommandBuffer.SetComponent(entityInQueryIndex, entity, new KomorkaID { Value = nowaKomorkaID });
                  }
-
-
 
              })
             .ScheduleParallel();
@@ -168,10 +240,15 @@ namespace PionGames.Systems
                 // entities = queryGrupa.ToEntityArray(Allocator.TempJob);
 
                 //positions = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
+                /*
+                                entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
+                                positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
+                               */
 
-                entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
-                positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
+
+
                 // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
+
 
                 /*entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
                 for (int i = 0; i < entitiesData.Length; i++)
@@ -281,7 +358,7 @@ namespace PionGames.Systems
         protected override void OnDestroy()
         {
             asteroidy2Destroy.Dispose();
-            komorkiAllEntities2.Dispose();
+            komorkiAllEntities.Dispose();
         }
     }
 
