@@ -76,7 +76,7 @@ namespace PionGames.Systems
         {
             //mozna by sie pokusic o rozwiazanie bez czyszczenia co klatke glownej tablicy komorkiAllEntities
             //tylko zamiast tego spr czy entity zmienilo swoje komorkaID i
-
+            //po wlaczeniu Burst jest ok 40-50FPS
             komorkiAllEntities.Clear();
             UpdateEntitiesKomorkaID();
                
