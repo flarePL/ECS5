@@ -40,7 +40,8 @@ namespace PionGames.Systems
         protected override void OnUpdate()
         {
             asteroidy2Destroy.Clear();
-
+            //zamiast tworzyc na nowo tab mozna spr ktore entities zmienily swoje AddSharedComponent
+            //https://www.youtube.com/watch?v=oO2yqVQwFUQ
             UtworzTabele();
             SprawdzZderzenia2();
 
