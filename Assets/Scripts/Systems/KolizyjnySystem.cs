@@ -74,7 +74,8 @@ namespace PionGames.Systems
 
         protected override void OnUpdate()
         {
-
+            //mozna by sie pokusic o rozwiazanie bez czyszczenia co klatke glownej tablicy komorkiAllEntities
+            //tylko zamiast tego spr czy entity zmienilo swoje komorkaID i
 
             komorkiAllEntities.Clear();
             UpdateEntitiesKomorkaID();
