@@ -75,11 +75,11 @@ namespace PionGames.Systems
         protected override void OnUpdate()
         {
 
-           
 
-                UpdateEntitiesKomorkaID();
-                komorkiAllEntities.Clear();
-                UtworzTabeleHashMap();
+            komorkiAllEntities.Clear();
+            UpdateEntitiesKomorkaID();
+               
+                //UtworzTabeleHashMap();
                 PrzygotujTabeleEntitiesByKey();
             UsunAsteroidyPoZderzeniu();
 
@@ -218,14 +218,17 @@ namespace PionGames.Systems
         private void UpdateEntitiesKomorkaID()
         {
             EntityCommandBuffer.ParallelWriter entityCommandBuffer = _endInitECBSystem.CreateCommandBuffer().AsParallelWriter();
+            NativeMultiHashMap<int, EntityData>.ParallelWriter komorkiAll = komorkiAllEntities.AsParallelWriter();
 
-            Entities
+           
+                
+             JobHandle jh=   Entities
              .ForEach((Entity entity, int entityInQueryIndex, ref Translation position, in KomorkaID komorkaID) =>
              {
                  int poczatekX = (int)math.floor(position.Value.x / Settings.DLUGOSC_KOMORKI);
                  int poczatekY = (int)math.floor(position.Value.y / Settings.DLUGOSC_KOMORKI);
                  int nowaKomorkaID = poczatekX + poczatekY * 100000;
-
+                 komorkiAll.Add(nowaKomorkaID, new EntityData { position = position.Value, index = entity.Index, entity = entity });
                  //tylko jesli jest zmiana
                  if (nowaKomorkaID != komorkaID.Value)
                  {
@@ -234,7 +237,8 @@ namespace PionGames.Systems
                  }
 
              })
-            .ScheduleParallel();
+            .ScheduleParallel(this.Dependency);
+            jh.Complete();
 
             _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
 
