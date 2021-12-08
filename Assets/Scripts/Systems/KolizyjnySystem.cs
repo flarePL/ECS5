@@ -1,5 +1,6 @@
 ﻿using Piongames;
 using PionGames.Components;
+using PionGames.Structs;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
@@ -35,7 +36,7 @@ namespace PionGames.Systems
         Native​Hash​Map<int, NativeArray<Entity>> entitiesALL = new NativeHashMap<int, NativeArray<Entity>>();
         Native​Hash​Map<int, NativeArray<Entity>> entitiesXXX = new NativeHashMap<int, NativeArray<Entity>>();
 
-        NativeMultiHashMap<int, Entity> komorkiAllEntities = new NativeMultiHashMap<int, Entity>(30000, Allocator.Persistent);
+        NativeMultiHashMap<int, EntityData> komorkiAllEntities = new NativeMultiHashMap<int, EntityData>(30000, Allocator.Persistent);
         private bool updatuje;
 
         protected override void OnCreate()
@@ -54,13 +55,13 @@ namespace PionGames.Systems
         public void UtworzTabeleHashMap()
         {
 
-            NativeMultiHashMap<int, Entity>.ParallelWriter komorkiAll = komorkiAllEntities.AsParallelWriter();
+            NativeMultiHashMap<int, EntityData>.ParallelWriter komorkiAll = komorkiAllEntities.AsParallelWriter();
 
-            JobHandle jH = Entities.ForEach((in Entity entity, in KomorkaID komorkaID) =>
+            JobHandle jH = Entities.ForEach((in Entity entity, in KomorkaID komorkaID,in Translation translation) =>
               {
 
                   // Debug.Log("wstawiam "+ komorkaID.Value +" "+entity);
-                  komorkiAll.Add(komorkaID.Value, entity);
+                  komorkiAll.Add(komorkaID.Value, new EntityData { position = translation.Value,index = entity.Index,entity = entity });
 
               })
             .ScheduleParallel(this.Dependency);
@@ -74,15 +75,13 @@ namespace PionGames.Systems
         protected override void OnUpdate()
         {
 
-            if (updatuje)
-            {
+           
 
                 UpdateEntitiesKomorkaID();
                 komorkiAllEntities.Clear();
                 UtworzTabeleHashMap();
                 PrzygotujTabeleEntitiesByKey();
-            }
-            //updatuje = false;
+            UsunAsteroidyPoZderzeniu();
 
         }
 
@@ -91,14 +90,15 @@ namespace PionGames.Systems
         {
 
            
-            Debug.Log("PrzygotujTabeleEntitiesByKey");
-            Native​Hash​Map<int, NativeArray<Entity>> entitiesALL3 = new NativeHashMap<int, NativeArray<Entity>>();
+            //Debug.Log("PrzygotujTabeleEntitiesByKey");
             //NativeArray<int> listaKluczy = komorkiAllEntities.GetKeyArray(Allocator.Temp);
 
             //var (keys, length) = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp);
             (NativeArray<int> keys, int length) = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp);
             //NativeArray<int> k = komorkiAllEntities.GetUniqueKeyArray(Allocator.Temp)
-
+            List<ZderzeniaJOB> ZderzeniaJOBy = new List<ZderzeniaJOB>();
+            NativeList<JobHandle> jobHandles = new NativeList<JobHandle>(Allocator.TempJob);
+            Dictionary<int,NativeList<EntityData>> EntitiesDataTab = new Dictionary<int,NativeList<EntityData>>();
 
             for (int i = 0; i < length; i++)
             {
@@ -111,33 +111,54 @@ namespace PionGames.Systems
                 /* a.Dispose();
                  entitiesALL[key].Dispose();*/
                 //entitiesALL[key] = new NativeList<Entity>(Allocator.Temp);
-                NativeArray<Entity> tab = new NativeArray<Entity>(ileEntitiesODanymKluczu, Allocator.Temp);
-
-                var index = 0;
+                //NativeList<EntityData> tab = new NativeList<EntityData>(ileEntitiesODanymKluczu, Allocator.TempJob);
+                EntitiesDataTab[key] = new NativeList<EntityData>(ileEntitiesODanymKluczu, Allocator.TempJob);
+                //EntitiesDataTab.Add(tab);
+               // var index = 0;
                 while (enumerator.MoveNext())
                 {
 
                     var entity = enumerator.Current;
                     //Debug.Log(" key " + entity.ToString());
                     //entitiesALL[key].Add(entity);
-                    tab[index] = entity;
-                    index++;
+                    // tab[index] = entity;
+                    EntitiesDataTab[key].Add(entity);
+
+                   // index++;
 
                 }
-                //Debug.Log("tab " + tab.Length);
-                entitiesALL3.Add(key, tab);
+                var zderzeniaJob = new ZderzeniaJOB { entitiesData = EntitiesDataTab[key], e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
 
-                Debug.Log("wstawilem");
-                //entitiesXXX.Add(key, tab);  //nie moge 
-                // entitiesALL[key].Dispose();
+                ZderzeniaJOBy.Add(zderzeniaJob);
+                JobHandle jh = zderzeniaJob.Schedule();
+                jobHandles.Add(jh);
 
-
-
-                // get items by key
+                
+               
             }
 
+            JobHandle.CompleteAll(jobHandles);
+            foreach (var job in ZderzeniaJOBy)
+            {
+                //entity2Destroy.AddRange(job.e2D);
+                //entity2Relocate.AddRange(job.e2R);
+
+                asteroidy2Destroy.AddRange(job.e2D);
+
+                job.entitiesData.Dispose();
+                job.e2D.Dispose();
+                job.e2R.Dispose();
+               
 
 
+            }
+           /* foreach (var komorkaJedna in EntitiesDataTab)
+            {
+                komorkaJedna.Value.Dispose();
+            }*/
+            
+
+           jobHandles.Dispose();
 
 
 
@@ -218,7 +239,7 @@ namespace PionGames.Systems
             _endInitECBSystem.AddJobHandleForProducer(this.Dependency);
 
         }
-        private void SprawdzZderzenia2()
+        /*private void SprawdzZderzenia2()
         {
             List<KomorkaGrupa> komorki = new List<KomorkaGrupa>();
             EntityManager.GetAllUniqueSharedComponentData<KomorkaGrupa>(komorki);
@@ -240,32 +261,32 @@ namespace PionGames.Systems
                 // entities = queryGrupa.ToEntityArray(Allocator.TempJob);
 
                 //positions = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
-                /*
+                *//*
                                 entitiesALL[komorkaJedna.komorkaID] = queryGrupa.ToEntityArray(Allocator.TempJob);
                                 positionsALL[komorkaJedna.komorkaID] = queryGrupa.ToComponentDataArray<Translation>(Allocator.TempJob);
-                               */
+                               *//*
 
 
 
                 // Debug.Log("ile entities w grupie " + entitiesALL[komorkaJedna.komorkaID].Length);
 
 
-                /*entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
+                *//*entitiesData = new NativeArray<EntityData>(positions.Length, Allocator.TempJob);
                 for (int i = 0; i < entitiesData.Length; i++)
                 {
                     entitiesData[i] = new EntityData { position = positions[i].Value, entity = entities[i], index = entities[i].Index };
 
                 }
                 var zderzeniaJob = new ZderzeniaJOB { positions = entitiesData, e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
-               */
+               *//*
                 var zderzeniaJob = new ZderzeniaJOB { positions = positionsALL[komorkaJedna.komorkaID], entities = entitiesALL[komorkaJedna.komorkaID], e2D = new NativeList<Entity>(Allocator.TempJob), e2R = new NativeList<Entity>(Allocator.TempJob) };
 
                 ZderzeniaJOBy.Add(zderzeniaJob);
                 JobHandle jh = zderzeniaJob.Schedule();
                 jobHandles.Add(jh);
-                /* positions.Dispose();
+                *//* positions.Dispose();
                  entitiesData.Dispose();
-                 entities.Dispose();*/
+                 entities.Dispose();*//*
 
 
             }
@@ -289,14 +310,14 @@ namespace PionGames.Systems
 
 
             }
-            /*foreach (KomorkaGrupa komorkaJedna in komorki)
+            *//*foreach (KomorkaGrupa komorkaJedna in komorki)
             {
                 positionsALL[komorkaJedna.komorkaID].Dispose();
-            }*/
+            }*//*
 
             jobHandles.Dispose();
 
-        }
+        }*/
         private void SprawdzZderzenia()
         {
             //Debug.Log("SprawdzZderzenia");
